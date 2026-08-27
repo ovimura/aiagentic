@@ -78,6 +78,28 @@ After deploy:
 
 Cloud Run sets `PORT`; the container listens on `0.0.0.0`.
 
+## Delete a Cloud Run service
+
+Cloud Run does not rename a service. Deploy a new name, then delete the old one when it is no longer needed.
+
+```powershell
+gcloud run services delete SERVICE_NAME --project=markethub-70f1a --region=us-west1
+```
+
+Skip the confirmation prompt:
+
+```powershell
+gcloud run services delete SERVICE_NAME --project=markethub-70f1a --region=us-west1 --quiet
+```
+
+Example — remove the unused `items-crud` service (keep `aiagentic`):
+
+```powershell
+gcloud run services delete items-crud --project=markethub-70f1a --region=us-west1
+```
+
+This only deletes that Cloud Run service. The `anthropic-api-key` secret is not removed.
+
 ## Cloud Run instance (optional)
 
 ```powershell
