@@ -4,13 +4,15 @@ FastAPI CRUD and Anthropic Q&A chat agent for Cloud Run.
 
 ## Configuration
 
-| Setting | Value |
+Replace the placeholders with your own values. Do not commit real project IDs, service names, or live URLs.
+
+| Setting | Placeholder |
 |---|---|
-| GCP project | `markethub-70f1a` |
-| Project number | `146001622616` |
-| Cloud Run service | `items-crud` |
-| Region | `us-west1` |
-| Secret | `anthropic-api-key` → `ANTHROPIC_API_KEY` |
+| GCP project | `PROJECT_ID` |
+| Project number | `PROJECT_NUMBER` |
+| Cloud Run service | `SERVICE_NAME` |
+| Region | `REGION` |
+| Secret | `SECRET_NAME` → `ANTHROPIC_API_KEY` |
 | Model | `CHAT_MODEL=anthropic:claude-sonnet-4-5` |
 | Timeout | `300` seconds |
 
@@ -29,52 +31,52 @@ python -m uvicorn app.main:app --reload --port 8080
 
 Send the same `session_id` on `POST /chat` to continue a conversation.
 
-## Deploy to the existing Cloud Run service
+## Deploy to Cloud Run
 
 Set the project:
 
 ```powershell
-gcloud config set project markethub-70f1a
+gcloud config set project PROJECT_ID
 ```
 
 Create the secret (once):
 
 ```powershell
-gcloud secrets create anthropic-api-key --replication-policy=automatic --project=markethub-70f1a
+gcloud secrets create SECRET_NAME --replication-policy=automatic --project=PROJECT_ID
 ```
 
 Add the Anthropic API key (paste the key, then Ctrl+Z and Enter):
 
 ```powershell
-gcloud secrets versions add anthropic-api-key --data-file=- --project=markethub-70f1a
+gcloud secrets versions add SECRET_NAME --data-file=- --project=PROJECT_ID
 ```
 
 Grant the Cloud Run service account access:
 
 ```powershell
-gcloud secrets add-iam-policy-binding anthropic-api-key `
-  --project=markethub-70f1a `
-  --member="serviceAccount:146001622616-compute@developer.gserviceaccount.com" `
+gcloud secrets add-iam-policy-binding SECRET_NAME `
+  --project=PROJECT_ID `
+  --member="serviceAccount:PROJECT_NUMBER-compute@developer.gserviceaccount.com" `
   --role="roles/secretmanager.secretAccessor"
 ```
 
-Redeploy this directory onto `items-crud`:
+Deploy this directory:
 
 ```powershell
-gcloud run deploy items-crud `
-  --project=markethub-70f1a `
-  --region=us-west1 `
+gcloud run deploy SERVICE_NAME `
+  --project=PROJECT_ID `
+  --region=REGION `
   --source . `
-  --set-secrets=ANTHROPIC_API_KEY=anthropic-api-key:latest `
+  --set-secrets=ANTHROPIC_API_KEY=SECRET_NAME:latest `
   --set-env-vars=CHAT_MODEL=anthropic:claude-sonnet-4-5 `
   --timeout=300
 ```
 
 After deploy:
 
-- Service: https://items-crud-146001622616.us-west1.run.app
-- Chat: https://items-crud-146001622616.us-west1.run.app/chat
-- Docs: https://items-crud-146001622616.us-west1.run.app/docs
+- Service: `https://SERVICE_NAME-PROJECT_NUMBER.REGION.run.app`
+- Chat: `https://SERVICE_NAME-PROJECT_NUMBER.REGION.run.app/chat`
+- Docs: `https://SERVICE_NAME-PROJECT_NUMBER.REGION.run.app/docs`
 
 Cloud Run sets `PORT`; the container listens on `0.0.0.0`.
 
@@ -83,33 +85,27 @@ Cloud Run sets `PORT`; the container listens on `0.0.0.0`.
 Cloud Run does not rename a service. Deploy a new name, then delete the old one when it is no longer needed.
 
 ```powershell
-gcloud run services delete SERVICE_NAME --project=markethub-70f1a --region=us-west1
+gcloud run services delete SERVICE_NAME --project=PROJECT_ID --region=REGION
 ```
 
 Skip the confirmation prompt:
 
 ```powershell
-gcloud run services delete SERVICE_NAME --project=markethub-70f1a --region=us-west1 --quiet
+gcloud run services delete SERVICE_NAME --project=PROJECT_ID --region=REGION --quiet
 ```
 
-Example — remove the unused `items-crud` service (keep `aiagentic`):
-
-```powershell
-gcloud run services delete items-crud --project=markethub-70f1a --region=us-west1
-```
-
-This only deletes that Cloud Run service. The `anthropic-api-key` secret is not removed.
+This only deletes that Cloud Run service. The secret is not removed.
 
 ## Cloud Run instance (optional)
 
 ```powershell
-gcloud builds submit --tag us-west1-docker.pkg.dev/markethub-70f1a/REPO/items-crud --project=markethub-70f1a
+gcloud builds submit --tag REGION-docker.pkg.dev/PROJECT_ID/REPO/SERVICE_NAME --project=PROJECT_ID
 
-gcloud beta run instances deploy items-crud `
-  --project=markethub-70f1a `
-  --image us-west1-docker.pkg.dev/markethub-70f1a/REPO/items-crud `
-  --region us-west1 `
+gcloud beta run instances deploy SERVICE_NAME `
+  --project=PROJECT_ID `
+  --image REGION-docker.pkg.dev/PROJECT_ID/REPO/SERVICE_NAME `
+  --region REGION `
   --port 8080 `
-  --set-secrets=ANTHROPIC_API_KEY=anthropic-api-key:latest `
+  --set-secrets=ANTHROPIC_API_KEY=SECRET_NAME:latest `
   --set-env-vars=CHAT_MODEL=anthropic:claude-sonnet-4-5
 ```
